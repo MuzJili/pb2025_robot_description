@@ -30,15 +30,6 @@ ament_auto_find_build_dependencies()
 ## Build ##
 ###########
 
-ament_auto_add_library(${PROJECT_NAME} SHARED
-  DIRECTORY src
-)
-
-rclcpp_components_register_node(${PROJECT_NAME}
-  PLUGIN "robot_description::RobotDescription"
-  EXECUTABLE robot_description_node
-)
-
 # 安装额外的资源文件
 install(DIRECTORY
   launch

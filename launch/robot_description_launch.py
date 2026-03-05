@@ -11,13 +11,10 @@ from launch.actions import (
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, TextSubstitution, Command
+from launch.substitutions import LaunchConfiguration, TextSubstitution, Command, NotSubstitution
 from launch_ros.actions import Node
 from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import RewrittenYaml
-from sdformat_tools.urdf_generator import UrdfGenerator
-from xmacro.xmacro4sdf import XMLMacro4sdf
-import yaml
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -65,7 +62,7 @@ def launch_setup(context: LaunchContext) -> list:
                 respawn_delay=2.0,
                 parameters=[
                     configured_params,
-                    {"robot_description": robot_description, 'publish_frequency': 300.0},
+                    {"robot_description": robot_description},
                 ],
                 arguments=["--ros-args", "--log-level", log_level],
             ),
@@ -77,6 +74,7 @@ def launch_setup(context: LaunchContext) -> list:
                         "imu_launch.py",
                     )
                 ),
+                condition=IfCondition(NotSubstitution(LaunchConfiguration("vision_debug")))
             ),
             Node(
                 condition=IfCondition(use_rviz),
@@ -144,6 +142,12 @@ def generate_launch_description():
         "use_rviz", default_value="True", description="Whether to start RViz"
     )
 
+    declare_vision_debug_cmd = DeclareLaunchArgument(
+        "vision_debug",
+        default_value="False",
+        description="",
+    )
+
     declare_use_respawn_cmd = DeclareLaunchArgument(
         "use_respawn",
         default_value="False",
@@ -164,10 +168,10 @@ def generate_launch_description():
     ld.add_action(declare_robot_xmacro_file_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
+    ld.add_action(declare_vision_debug_cmd)
     ld.add_action(declare_use_rviz_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
-    # ld.add_action(robot_gimbal_publisher)
 
     # Add the actions to launch all of the nodes
     ld.add_action(OpaqueFunction(function=launch_setup))
